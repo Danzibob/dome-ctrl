@@ -31,7 +31,7 @@ Other Controls                                  \r
     Esc - Turn off lights and quit              \r
     Up Arrow - Increase brightness              \r
     Down Arrow - Decrease brightness            \r
-";
+\n\n\r";
 
 fn match_mode(k: char, brightness: u8) -> Option<[u8; CHANNELS_PER_MODULE]> {
     let arr = match k {
