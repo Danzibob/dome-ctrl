@@ -53,6 +53,8 @@ fn match_mode(k:char, brightness:u8) -> Option<[u8; CHANNELS_PER_MODULE]>{
 fn main() {
     let stdin = stdin();
     let mut stdout = stdout().into_raw_mode().unwrap();
+    write!(stdout, "{}", HELP).unwrap();
+    stdout.flush().unwrap();
 
     // Create the linux SPI device adapter
     // Max brightness is limited via the adapter library here: -------------v
@@ -68,18 +70,6 @@ fn main() {
 
     // Detect keypress events
     for c in stdin.keys() {
-        //clearing the screen and going to top left corner
-        write!(
-            stdout,
-            "{}{}{}\n\n\rBrightness: {}\tColor: {}",
-            termion::cursor::Goto(1, 1),
-            termion::clear::All,
-            HELP,
-            brightness,
-            color
-        )
-        .unwrap();
-        stdout.flush().unwrap();
         
         // Key event unwrapping
         match c.unwrap() {
@@ -107,6 +97,18 @@ fn main() {
             }
             _ => {}
         }
+
+        //clearing the screen and going to top left corner
+        write!(
+            stdout,
+            "{}{}\n\n\rBrightness: {}\tColor: {}",
+            termion::cursor::Left(100),
+            termion::clear::CurrentLine,
+            brightness,
+            color
+        )
+        .unwrap();
+        stdout.flush().unwrap();
 
         // Send updated colors to the strip adapter
         for i in 0..NUM_MODULES {
