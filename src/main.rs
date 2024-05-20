@@ -12,34 +12,43 @@ const CHANNELS_PER_MODULE: usize = 9;
 const NUM_LEDS: usize = NUM_MODULES * CHANNELS_PER_MODULE;
 
 // useful constant to turn off LEDs
-const OFF: [u8; 9] = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+const OFF: [u8; 9] = [0; CHANNELS_PER_MODULE];
 
 const HELP: &str = "\
----=== Dome Control v1.0 ===---
+        ---=== Dome Control v1.0 ===---         \r
+                                                \r
+Press to choose the lighting colour (uniform):  \r
+Non-Polarized           Polarized (Cool White)  \r
+    R - Red                 C - Circular        \r
+    G - Green               V - Vertical        \r
+    B - Blue                H - Horizontal      \r
+    W - Warm White          D - Diagonal        \r
+    N - Neutral White                           \r
+                                                \r
+Other Controls                                  \r
+    A - All lights                              \r
+    O - Turn off all lights                     \r
+    Esc - Turn off lights and quit              \r
+    Up Arrow - Increase brightness              \r
+    Down Arrow - Decrease brightness            \r";
 
-Press the following keys to choose the lighting colour (uniform lighting):
-
-Non-Polarized
-    R - Red
-    G - Green
-    B - Blue
-    W - Warm White
-    N - Neutral White
-
-Polarized (Cool White)
-    C - Circular
-    V - Vertical
-    H - Horizontal
-    D - Diagonal
-
-Other Controls
-    A - All lights
-    O - Turn off all lights
-    Q - Turn off lights and quit
-
-    Up Arrow - Increase brightness
-    Down Arrow - Decrease brightness\
-";
+fn match_mode(k:char, brightness:u8) -> Option<[u8; CHANNELS_PER_MODULE]>{
+    let arr = match k {
+    'r' => [brightness, 0, 0, 0, 0, 0, 0, 0, 0],
+    'g' => [0, brightness, 0, 0, 0, 0, 0, 0, 0],
+    'b' => [0, 0, brightness, 0, 0, 0, 0, 0, 0],
+    'c' => [0, 0, 0, brightness, 0, 0, 0, 0, 0],
+    'w' => [0, 0, 0, 0, brightness, 0, 0, 0, 0],
+    'n' => [0, 0, 0, 0, 0, brightness, 0, 0, 0],
+    'v' => [0, 0, 0, 0, 0, 0, brightness, 0, 0],
+    'h' => [0, 0, 0, 0, 0, 0, 0, brightness, 0],
+    'd' => [0, 0, 0, 0, 0, 0, 0, 0, brightness],
+    'a' => [brightness; 9],
+    'o' => OFF,
+    _  => return None
+    };
+    Some(arr)
+}
 
 fn main() {
     let stdin = stdin();
@@ -52,7 +61,8 @@ fn main() {
     let mut strip: LEDs<NUM_LEDS, CHANNELS_PER_MODULE, _> = LEDs::new(hw_adapter);
 
     // Variable for uniform lighting color
-    let mut color = OFF;
+    let mut pixel = OFF;
+    let mut color = 'o';
     let mut brightness = 200;
     let mut quit = false;
 
@@ -61,42 +71,46 @@ fn main() {
         //clearing the screen and going to top left corner
         write!(
             stdout,
-            "{}{}{}",
+            "{}{}{}\n\n\rBrightness: {}\tColor: {}",
             termion::cursor::Goto(1, 1),
             termion::clear::All,
-            HELP
+            HELP,
+            brightness,
+            color
         )
         .unwrap();
         stdout.flush().unwrap();
-
-        // Set the strip color based on the key pressed
+        
+        // Key event unwrapping
         match c.unwrap() {
-            // Switch color or turn off
-            Key::Char('r') => color = [brightness, 0, 0, 0, 0, 0, 0, 0, 0],
-            Key::Char('g') => color = [0, brightness, 0, 0, 0, 0, 0, 0, 0],
-            Key::Char('b') => color = [0, 0, brightness, 0, 0, 0, 0, 0, 0],
-            Key::Char('c') => color = [0, 0, 0, brightness, 0, 0, 0, 0, 0],
-            Key::Char('w') => color = [0, 0, 0, 0, brightness, 0, 0, 0, 0],
-            Key::Char('n') => color = [0, 0, 0, 0, 0, brightness, 0, 0, 0],
-            Key::Char('v') => color = [0, 0, 0, 0, 0, 0, brightness, 0, 0],
-            Key::Char('h') => color = [0, 0, 0, 0, 0, 0, 0, brightness, 0],
-            Key::Char('d') => color = [0, 0, 0, 0, 0, 0, 0, 0, brightness],
-            Key::Char('a') => color = [brightness; 9],
-            Key::Char('o') => color = OFF,
-            // Change brightness
-            Key::Up if brightness < 250 => brightness += 10,
-            Key::Down if brightness > 10 => brightness -= 10,
+            // If keypress was a letter AND it matches a color,
+            // Set that color for both the pixel and mode
+            Key::Char(k) => {
+                if let Some(px) = match_mode(k, brightness) {
+                    pixel = px;
+                    color = k;
+                }
+            },
+            // If up or down arrow was pressed, change brightness
+            Key::Up if brightness < 250 => {
+                brightness += 10;
+                pixel = match_mode(color, brightness).unwrap();
+            }
+            Key::Down if brightness > 10 =>{
+                brightness -= 10;
+                pixel = match_mode(color, brightness).unwrap();
+            }
             // Quit (also turns off)
-            Key::Char('q') => {
-                color = OFF;
+            Key::Esc => {
+                pixel = OFF;
                 quit = true;
             }
-            _ => (),
+            _ => {}
         }
 
         // Send updated colors to the strip adapter
         for i in 0..NUM_MODULES {
-            strip.set_node(i, color);
+            strip.set_node(i, pixel);
         }
         // Have the adapter write these to the hardware
         strip.write().unwrap();
