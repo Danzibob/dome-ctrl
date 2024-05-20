@@ -1,0 +1,10 @@
+[package]
+name = "dome-ctrl"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+termion = "4.0.0"
+ws28xx-n-channel-spi = { git = "https://github.com/danzibob/WS28xx-n-channel-spi", branch = "n-channel" }
