@@ -91,7 +91,7 @@ fn main() {
                 pixel = match_mode(color, brightness).unwrap();
             }
             // Quit (also turns off)
-            Key::Esc => {
+            Key::Esc | Key::Ctrl('c') => {
                 pixel = OFF;
                 quit = true;
             }
