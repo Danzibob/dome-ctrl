@@ -30,22 +30,23 @@ Other Controls                                  \r
     O - Turn off all lights                     \r
     Esc - Turn off lights and quit              \r
     Up Arrow - Increase brightness              \r
-    Down Arrow - Decrease brightness            \r";
+    Down Arrow - Decrease brightness            \r
+";
 
-fn match_mode(k:char, brightness:u8) -> Option<[u8; CHANNELS_PER_MODULE]>{
+fn match_mode(k: char, brightness: u8) -> Option<[u8; CHANNELS_PER_MODULE]> {
     let arr = match k {
-    'r' => [brightness, 0, 0, 0, 0, 0, 0, 0, 0],
-    'g' => [0, brightness, 0, 0, 0, 0, 0, 0, 0],
-    'b' => [0, 0, brightness, 0, 0, 0, 0, 0, 0],
-    'c' => [0, 0, 0, brightness, 0, 0, 0, 0, 0],
-    'w' => [0, 0, 0, 0, brightness, 0, 0, 0, 0],
-    'n' => [0, 0, 0, 0, 0, brightness, 0, 0, 0],
-    'v' => [0, 0, 0, 0, 0, 0, brightness, 0, 0],
-    'h' => [0, 0, 0, 0, 0, 0, 0, brightness, 0],
-    'd' => [0, 0, 0, 0, 0, 0, 0, 0, brightness],
-    'a' => [brightness; 9],
-    'o' => OFF,
-    _  => return None
+        'r' => [brightness, 0, 0, 0, 0, 0, 0, 0, 0],
+        'g' => [0, brightness, 0, 0, 0, 0, 0, 0, 0],
+        'b' => [0, 0, brightness, 0, 0, 0, 0, 0, 0],
+        'c' => [0, 0, 0, brightness, 0, 0, 0, 0, 0],
+        'w' => [0, 0, 0, 0, brightness, 0, 0, 0, 0],
+        'n' => [0, 0, 0, 0, 0, brightness, 0, 0, 0],
+        'v' => [0, 0, 0, 0, 0, 0, brightness, 0, 0],
+        'h' => [0, 0, 0, 0, 0, 0, 0, brightness, 0],
+        'd' => [0, 0, 0, 0, 0, 0, 0, 0, brightness],
+        'a' => [brightness; 9],
+        'o' => OFF,
+        _ => return None,
     };
     Some(arr)
 }
@@ -70,7 +71,6 @@ fn main() {
 
     // Detect keypress events
     for c in stdin.keys() {
-        
         // Key event unwrapping
         match c.unwrap() {
             // If keypress was a letter AND it matches a color,
@@ -80,13 +80,13 @@ fn main() {
                     pixel = px;
                     color = k;
                 }
-            },
+            }
             // If up or down arrow was pressed, change brightness
             Key::Up if brightness < 250 => {
                 brightness += 10;
                 pixel = match_mode(color, brightness).unwrap();
             }
-            Key::Down if brightness > 10 =>{
+            Key::Down if brightness > 10 => {
                 brightness -= 10;
                 pixel = match_mode(color, brightness).unwrap();
             }
@@ -101,7 +101,7 @@ fn main() {
         //clearing the screen and going to top left corner
         write!(
             stdout,
-            "{}{}\n\n\rBrightness: {}\tColor: {}",
+            "{}{}Brightness: {}\tColor: {}",
             termion::cursor::Left(100),
             termion::clear::CurrentLine,
             brightness,
