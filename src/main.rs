@@ -101,8 +101,9 @@ fn main() {
         //clearing the screen and going to top left corner
         write!(
             stdout,
-            "{}{}Brightness: {}\tColor: {}",
+            "{}{}{}Brightness: {}\tColor: {}\n\r",
             termion::cursor::Left(100),
+            termion::cursor::Up(1),
             termion::clear::CurrentLine,
             brightness,
             color
