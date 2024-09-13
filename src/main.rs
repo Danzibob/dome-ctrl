@@ -166,8 +166,15 @@ fn scene_player(file_path: &str) {
     let mut strip: LEDs<NUM_LEDS, CHANNELS_PER_MODULE, _> = LEDs::new(hw_adapter);
 
     let mut scene: Scene<NUM_MODULES, CHANNELS_PER_MODULE> = Scene::new_from_file(file_path);
-    let mut quit = false;
 
+    // Send updated colors to the strip adapter
+    for i in 0..NUM_MODULES {
+        strip.set_node(i, scene.get_node(i));
+    }
+    // Have the adapter write these to the hardware
+    strip.write().unwrap();
+
+    let mut quit = false;
     // Detect keypress events
     for c in stdin.keys() {
         // Key event unwrapping
@@ -188,7 +195,7 @@ fn scene_player(file_path: &str) {
             termion::cursor::Left(100),
             termion::cursor::Up(1),
             termion::clear::CurrentLine,
-            scene.current_frame,
+            scene.current_frame + 1,
             scene.frame_count()
         )
         .unwrap();
@@ -203,6 +210,7 @@ fn scene_player(file_path: &str) {
 
         // Quit after turning off LEDs
         if quit {
+            strip.clear().unwrap();
             break;
         }
     }
